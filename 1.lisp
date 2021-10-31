@@ -20,3 +20,12 @@
 			:string "%d"
 			:int 1000
 			:int))
+
+(defun square (a)
+  (declare (type (simple-array * int)))
+  (loop for i below (len a)
+	do
+	   (setf (aref a i)
+		 (* (aref a i)
+		    (aref a i))
+		 )))
