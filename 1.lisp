@@ -1,8 +1,5 @@
 (ql:quickload "cffi")
-
-(defun sub (a b)
-  (- a b))
-
+ 
 (defpackage #:g
   (:use #:cl #:core #:clasp-ffi))
 (in-package #:g)
