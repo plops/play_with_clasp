@@ -1,0 +1,92 @@
+- Synopsis: I want to try the clasp common lisp implementation. First
+  I describe how to build it on Gentoo. Then I discuss how to install
+  it on Fedora (with the gentoo llvm and clang libraries).
+
+
+
+- building (on gentoo)
+
+#+begin_example
+emacs /etc/portage/package.accept_keywords
+# add the following lines
+sys-devel/clang ~amd64
+sys-devel/clang-runtime ~amd64
+sys-devel/llvm ~amd64
+sys-libs/compiler-rt ~amd64
+sys-libs/compiler-rt-sanitizers ~amd64
+sys-libs/libomp ~amd64
+
+sudo emerge -av =clang-13.0.0
+sudo emerge -av dev-libs/boehm-gc
+sudo ln -s /usr/lib/llvm/13/bin/llvm-config /usr/lib/llvm/13/bin/llvm-config-13.0-64
+export PATH=$PATH:/usr/lib/llvm/13/bin/
+
+# can't compile in imgui
+#cd clasp/extensions; git clone https://github.com/clasp-developers/imgui-clasp
+#sudo ln -s /usr/lib64/libGL.so /usr/lib64/libgl.so
+
+#https://clasp-developers.github.io/building.html
+
+
+./waf distclean           # (1)
+./waf configure           # (2)
+
+emacs wscript
+# edit out the following lines
+clangASTMatchers
+...
+clangBasic
+# and write one line with 'clang', 'clang-cpp'
+
+
+./waf build_dboehmprecise # (3)
+build/boehmprecise/clasp
+#+end_example
+- install quicklisp (i already had ~/quicklisp from my sbcl install)
+  #+begin_example
+clasp --load ~/quicklisp/setup.lisp
+(ql:add-to-init-file)
+
+  #+end_example
+
+
+- documention for clasp:
+  - https://github.com/drmeister/clasp
+  - https://clasp-developers.github.io
+  - https://github.com/clasp-developers/clasp-documentation/tree/main/org
+  - https://github.com/clasp-developers/clasp-documentation/blob/main/org/manual.org
+
+
+- install on fedora
+  - copy the build results with dependencies
+#+begin_example
+# ~/src/clasp
+[martin@localhost clasp]$ find . -type f
+./build/boehmprecise/libLLVM-13.so
+./build/boehmprecise/libffi.so.7
+./build/boehmprecise/libclang.so.13
+./build/boehmprecise/generated/clasp.snapshot
+./build/boehmprecise/clasp
+./build/boehmprecise/libclang-cpp.so.13
+./build/boehmprecise/fasl/cclasp-boehmprecise-image.fasp
+[martin@localhost clasp]$ du -sh
+900M    .
+#+end_example
+
+  - run and add quicklisp
+    #+begin_example
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/martin/src/clasp/build/boehmprecise/
+clasp --load quicklisp/setup.lisp
+(ql:add-to-init-file)
+#+end_example
+
+  - package for release
+#+begin_example
+# get version with clasp -v
+
+cd ~/src
+tar czf clasp-boehmprecise-0.4.2-4829-g392cd449a.tar.gz clasp
+[martin@localhost src]$ ls -ltrh clasp-boehmprecise-0.4.2-4829-g392cd449a.tar.gz 
+-rw-rw-r--. 1 martin martin 191M Oct 31 23:57 clasp-boehmprecise-0.4.2-4829-g392cd449a.tar.gz
+
+#+end_example
